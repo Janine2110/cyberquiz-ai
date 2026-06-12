@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title >CyberQuiz AI</title>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <h1>CyberQuiz AI</h1>
+
+  <p>
+    Escolha um tema de cibersegurança, gere uma pergunta e receba uma avaliação da sua resposta.
+  </p>
+
+  <label for="tema">
+    <strong>Tema:</strong>
+  </label>
+
+  <select id="tema">
+    <option value="Phishing">Phishing</option>
+    <option value="Criptografia">Criptografia</option>
+    <option value="Senhas">Senhas</option>
+    <option value="Engenharia Social">Engenharia Social</option>
+    <option value="Redes">Redes</option>
+  </select>
+
+  <button onclick="gerarPergunta()">
+    Gerar Pergunta
+  </button>
+
+  <div class="pergunta">
+    <p class="question">Pergunta:</p>
+
+    <p id="pergunta">
+      Clique em "Gerar Pergunta".
+    </p>
+  </div>
+
+  <label for="resposta">
+    <strong>Sua resposta:</strong>
+  </label>
+
+  <textarea
+    id="resposta"
+    placeholder="Digite sua resposta aqui..."
+    class="responsetext"
+  ></textarea>
+
+  <button onclick="corrigirResposta()">
+    Corrigir Resposta
+  </button>
+
+  <h2>Avaliação</h2>
+
+  <pre id="resultado" class="result">A avaliação aparecerá aqui.</pre>
+
+  <script>
+    async function gerarPergunta() {
+      const tema =
+        document.getElementById("tema").value;
+
+      const perguntaElement =
+        document.getElementById("pergunta");
+
+      perguntaElement.textContent =
+        "Gerando pergunta...";
+
+      try {
+        const response =
+          await fetch("/api/pergunta", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              tema
+            })
+          });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          perguntaElement.textContent =
+            data.erro || "Erro ao gerar pergunta.";
+
+          return;
+        }
+
+        perguntaElement.textContent =
+          data.pergunta;
+
+      } catch (error) {
+        perguntaElement.textContent =
+          "Erro ao conectar com a API.";
+      }
+    }
+
+    async function corrigirResposta() {
+      const tema =
+        document.getElementById("tema").value;
+
+      const pergunta =
+        document.getElementById("pergunta").textContent;
+
+      const resposta =
+        document.getElementById("resposta").value;
+
+      const resultado =
+        document.getElementById("resultado");
+
+      if (!resposta.trim()) {
+        resultado.textContent =
+          "Digite uma resposta antes de corrigir.";
+
+        return;
+      }
+
+      resultado.textContent =
+        "Corrigindo resposta...";
+
+      try {
+        const response =
+          await fetch("/api/corrigir", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              tema,
+              pergunta,
+              resposta
+            })
+          });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          resultado.textContent =
+            data.erro || "Erro ao corrigir.";
+
+          return;
+        }
+
+        resultado.textContent =
+          data.avaliacao;
+
+      } catch (error) {
+        resultado.textContent =
+          "Erro ao conectar com a API.";
+      }
+    }
+  </script>
+
+</body>
+</html>
