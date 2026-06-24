@@ -2,7 +2,7 @@
 
 ## Descrição
 
-O CyberQuiz AI é uma aplicação web desenvolvida para auxiliar estudantes de ADS no aprendizado de conceitos de cibersegurança.
+O CyberQuiz AI é uma aplicação web desenvolvida para auxiliar estudantes de ADS e Redes de Computadores no aprendizado de conceitos de cibersegurança.
 
 O sistema utiliza um modelo de linguagem (LLM) através da API do OpenRouter para gerar perguntas sobre temas de cibersegurança e corrigir as respostas fornecidas pelo usuário.
 
