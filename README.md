@@ -26,16 +26,24 @@ Permitir que estudantes pratiquem conteúdos de cibersegurança por meio de perg
 * Criptografia
 * Senhas
 * Engenharia Social
-* Redes
+* Redes de Computadores
 
-## Tecnologias Utilizadas
+## 🛠️ Tecnologias e Recursos
 
-* Node.js
-* Express
-* OpenRouter API
-* HTML
-* CSS
-* JavaScript
+### **Backend**
+* **Node.js** — Ambiente de execução JavaScript.
+* **Express** — Framework minimalista para criação da API local.
+* **Dotenv** — Gerenciamento seguro de variáveis de ambiente.
+* **CORS** — Liberação de requisições entre origens diferentes.
+
+### **Frontend**
+* **HTML5 & CSS3** — Estrutura e estilização fluida/responsiva (Mobile e Desktop).
+* **JavaScript (ES6+)** — Lógica do cliente e consumo assíncrono da API.
+* **Fetch API** — Comunicação assíncrona com as rotas do servidor usando `async/await`.
+* **Web Audio API** — Sintetização de efeitos sonoros nativos em tempo real.
+
+### **Inteligência Artificial**
+* **OpenRouter API** — Integração com o modelo `gpt-oss-120b:free` para geração e correção de perguntas acadêmicas de cibersegurança.
 
 ## Instalação
 
