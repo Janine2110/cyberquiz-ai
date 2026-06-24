@@ -2,157 +2,155 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title >CyberQuiz AI</title>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CyberQuiz AI</title>
   <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-  <h1>CyberQuiz AI</h1>
-
-  <p>
-    Escolha um tema de cibersegurança, gere uma pergunta e receba uma avaliação da sua resposta.
-  </p>
-
-  <label for="tema">
-    <strong>Tema:</strong>
-  </label>
-
-  <select id="tema">
-    <option value="Phishing">Phishing</option>
-    <option value="Criptografia">Criptografia</option>
-    <option value="Senhas">Senhas</option>
-    <option value="Engenharia Social">Engenharia Social</option>
-    <option value="Redes">Redes</option>
-  </select>
-
-  <button onclick="gerarPergunta()">
-    Gerar Pergunta
-  </button>
-
-  <div class="pergunta">
-    <p class="question">Pergunta:</p>
-
-    <p id="pergunta">
-      Clique em "Gerar Pergunta".
+  <div class="container">
+    <h1>CyberQuiz AI</h1>
+    <p>
+      Escolha um tema de cibersegurança, gere uma pergunta para o nível de ADS/Redes de Computadores (3º ao 5º semestre) e receba sua avaliação.
     </p>
+
+    <label for="tema"><strong>Tema:</strong></label>
+    <select id="tema">
+      <option value="Phishing">Phishing</option>
+      <option value="Criptografia">Criptografia</option>
+      <option value="Senhas">Senhas</option>
+      <option value="Engenharia Social">Engenharia Social</option>
+      <option value="Redes">Redes de Computadores</option>
+    </select>
+
+    <button onclick="gerarPergunta()">Gerar Pergunta</button>
+
+    <div class="pergunta">
+      <p class="question">Pergunta:</p>
+      <p id="pergunta">Clique em "Gerar Pergunta".</p>
+    </div>
+
+    <label for="resposta"><strong>Sua resposta:</strong></label>
+    <textarea id="resposta" placeholder="Digite sua resposta aqui..." class="responsetext"></textarea>
+
+    <button onclick="corrigirResposta()">Corrigir Resposta</button>
+
+    <h2>Avaliação</h2>
+    
+    <div id="resultado-container" class="result-box">
+      <div id="conteudo-avaliacao">
+        <p style="margin: 0; text-align: center;">A avaliação aparecerá aqui.</p>
+      </div>
+    </div>
   </div>
 
-  <label for="resposta">
-    <strong>Sua resposta:</strong>
-  </label>
-
-  <textarea
-    id="resposta"
-    placeholder="Digite sua resposta aqui..."
-    class="responsetext"
-  ></textarea>
-
-  <button onclick="corrigirResposta()">
-    Corrigir Resposta
-  </button>
-
-  <h2>Avaliação</h2>
-
-  <pre id="resultado" class="result">A avaliação aparecerá aqui.</pre>
-
   <script>
+    let historicoPerguntas = [];
+
+    function tocarSomPimpim() {
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        
+        const ctx = new AudioContext();
+        
+        const osc1 = ctx.createOscillator();
+        const gain1 = ctx.createGain();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(587.33, ctx.currentTime);
+        gain1.gain.setValueAtTime(0.1, ctx.currentTime);
+        gain1.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+        osc1.connect(gain1);
+        gain1.connect(ctx.destination);
+        osc1.start(ctx.currentTime);
+        osc1.stop(ctx.currentTime + 0.1);
+        
+        const osc2 = ctx.createOscillator();
+        const gain2 = ctx.createGain();
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(880, ctx.currentTime + 0.08);
+        gain2.gain.setValueAtTime(0.1, ctx.currentTime + 0.08);
+        gain2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+        osc2.connect(gain2);
+        gain2.connect(ctx.destination);
+        osc2.start(ctx.currentTime + 0.08);
+        osc2.stop(ctx.currentTime + 0.2);
+        
+      } catch (e) {}
+    }
+
     async function gerarPergunta() {
-      const tema =
-        document.getElementById("tema").value;
+      const tema = document.getElementById("tema").value;
+      const perguntaElement = document.getElementById("pergunta");
 
-      const perguntaElement =
-        document.getElementById("pergunta");
-
-      perguntaElement.textContent =
-        "Gerando pergunta...";
+      perguntaElement.textContent = "Gerando pergunta...";
+      tocarSomPimpim();
 
       try {
-        const response =
-          await fetch("/api/pergunta", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              tema
-            })
-          });
+        const response = await fetch("/api/pergunta", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ tema, historico: historicoPerguntas })
+        });
 
         const data = await response.json();
 
         if (!response.ok) {
-          perguntaElement.textContent =
-            data.erro || "Erro ao gerar pergunta.";
-
+          perguntaElement.textContent = data.erro || "Erro ao gerar pergunta.";
           return;
         }
 
-        perguntaElement.textContent =
-          data.pergunta;
+        perguntaElement.textContent = data.pergunta;
 
+        if (!historicoPerguntas.includes(data.pergunta)) {
+          historicoPerguntas.push(data.pergunta);
+        }
       } catch (error) {
-        perguntaElement.textContent =
-          "Erro ao conectar com a API.";
+        perguntaElement.textContent = "Erro ao conectar com a API.";
       }
     }
 
     async function corrigirResposta() {
-      const tema =
-        document.getElementById("tema").value;
+      const tema = document.getElementById("tema").value;
+      const pergunta = document.getElementById("pergunta").textContent;
+      const resposta = document.getElementById("resposta").value;
+      
+      const conteudo = document.getElementById("conteudo-avaliacao");
 
-      const pergunta =
-        document.getElementById("pergunta").textContent;
-
-      const resposta =
-        document.getElementById("resposta").value;
-
-      const resultado =
-        document.getElementById("resultado");
-
-      if (!resposta.trim()) {
-        resultado.textContent =
-          "Digite uma resposta antes de corrigir.";
-
+      if (!resposta.trim() || pergunta === 'Clique em "Gerar Pergunta".' || pergunta === "Gerando pergunta...") {
+        conteudo.innerHTML = `<p style="margin: 0; text-align: center;">Gere uma pergunta e digite uma resposta válida antes de corrigir.</p>`;
         return;
       }
 
-      resultado.textContent =
-        "Corrigindo resposta...";
+      conteudo.innerHTML = `<p style="margin: 0; text-align: center;">Corrigindo resposta...</p>`;
+      tocarSomPimpim();
 
       try {
-        const response =
-          await fetch("/api/corrigir", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              tema,
-              pergunta,
-              resposta
-            })
-          });
+        const response = await fetch("/api/corrigir", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ tema, pergunta, resposta })
+        });
 
         const data = await response.json();
 
         if (!response.ok) {
-          resultado.textContent =
-            data.erro || "Erro ao corrigir.";
-
+          conteudo.innerHTML = `<p style="margin: 0; text-align: center;">${data.erro || "Erro ao corrigir."}</p>`;
           return;
         }
 
-        resultado.textContent =
-          data.avaliacao;
+        conteudo.innerHTML = `
+          <p><strong>Nota:</strong> <span>${data.nota}</span></p>
+          <p><strong>Situação:</strong> <span>${data.situacao}</span></p>
+          <p><strong>O que acertou:</strong> <span>${data.acertos}</span></p>
+          <p><strong>O que faltou:</strong> <span>${data.faltou}</span></p>
+          <p><strong>Explicação Ideal:</strong> <span>${data.explicacao}</span></p>
+        `;
 
       } catch (error) {
-        resultado.textContent =
-          "Erro ao conectar com a API.";
+        conteudo.innerHTML = `<p style="margin: 0; text-align: center;">Erro ao conectar com a API.</p>`;
       }
     }
   </script>
-
 </body>
 </html>

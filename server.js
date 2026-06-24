@@ -26,13 +26,15 @@ app.get("/api/status", (req, res) => {
 
 app.post("/api/pergunta", async (req, res) => {
   try {
-    const { tema } = req.body;
+    const { tema, historico } = req.body;
 
     if (!tema) {
-      return res.status(400).json({
-        erro: "O tema é obrigatório.",
-      });
+      return res.status(400).json({ erro: "O tema é obrigatório." });
     }
+
+    const perguntasAnteriores = historico && historico.length > 0 
+      ? historico.map((p, i) => `${i + 1}. "${p}"`).join("\n")
+      : "Nenhuma pergunta foi feita ainda nesta sessão.";
 
     const response = await fetch(
       "https://openrouter.ai/api/v1/chat/completions",
@@ -49,15 +51,23 @@ app.post("/api/pergunta", async (req, res) => {
           messages: [
             {
               role: "system",
-              content:
-                "Você é um professor de cibersegurança. Gere apenas uma pergunta curta e objetiva de nível iniciante para estudantes de ADS. A pergunta deve possuir uma resposta principal clara para facilitar a correção.",
+              content: `Você é um professor universitário de cibersegurança para turmas de 3º ao 5º semestre de ADS e Redes de Computadores.
+              
+Gere uma pergunta curta, direta e de nível intermediário sobre o tema solicitado.
+
+DIRETRIZES IMPORTANTES:
+- Se o tema selecionado for "Redes", foque estritamente em Redes de Computadores (protocolos, arquitetura OSI/TCP-IP, roteamento, firewalls, segurança de infraestrutura de rede). Não divague sobre outros tipos de redes.
+- REGRA DE INEDITISMO CRÍTICA: Você NUNCA deve repetir ou criar perguntas com escopo e abordagem similares a estas que já foram feitas:
+${perguntasAnteriores}
+
+Varie a abordagem técnica, aborde vulnerabilidades diferentes ou use novos cenários para garantir que a pergunta atual seja totalmente inédita.`,
             },
             {
               role: "user",
-              content: `Crie uma pergunta sobre ${tema}. Retorne somente a pergunta.`,
+              content: `Crie uma pergunta inédita sobre o tema: ${tema}. Retorne apenas o texto da pergunta, sem prefixos ou explicações.`,
             },
           ],
-          temperature: 0.7,
+          temperature: 0.82,
           max_completion_tokens: 150,
         }),
       }
@@ -65,29 +75,19 @@ app.post("/api/pergunta", async (req, res) => {
 
     if (!response.ok) {
       const detalhe = await response.text();
-
-      return res.status(502).json({
-        erro: "Erro ao gerar pergunta.",
-        detalhe,
-      });
+      return res.status(502).json({ erro: "Erro ao gerar pergunta.", detalhe });
     }
 
     const data = await response.json();
-
     const pergunta = data.choices?.[0]?.message?.content;
 
     if (!pergunta) {
-      return res.status(502).json({
-        erro: "Pergunta não gerada.",
-      });
+      return res.status(502).json({ erro: "Pergunta não gerada." });
     }
 
     res.json({ pergunta });
   } catch (error) {
-    res.status(500).json({
-      erro: "Erro interno.",
-      detalhe: error.message,
-    });
+    res.status(500).json({ erro: "Erro interno.", detalhe: error.message });
   }
 });
 
@@ -111,58 +111,33 @@ app.post("/api/corrigir", async (req, res) => {
           "HTTP-Referer": "http://localhost:3000",
           "X-OpenRouter-Title": "CyberQuiz AI",
         },
+        response_format: { type: "json_object" },
         body: JSON.stringify({
           model: MODEL,
           messages: [
             {
               role: "system",
-              content: `
-Você é um professor universitário de ADS especializado em cibersegurança.
+              content: `Você é um professor universitário especialista em cibersegurança, lecionando para turmas de 3º ao 5º semestre de Análise e Desenvolvimento de Sistemas (ADS) e Redes de Computadores.
+              
+Avalie a resposta de forma justa e compatível com uma prova técnica de graduação deste nível (intermediário). Caso o tema seja "Redes", exija precisão técnica voltada a Redes de Computadores.
 
-Avalie a resposta de forma justa e compatível com uma prova de graduação.
+Você DEVE responder UNICAMENTE com um objeto JSON válido. 
 
-Regras de correção:
-
-- Avalie apenas o que foi solicitado na pergunta.
-- Não desconte pontos por informações extras que não foram pedidas.
-- Se o aluno demonstrar compreensão correta da ideia principal, atribua nota entre 8 e 10.
-- Utilize notas entre 5 e 7 apenas quando houver entendimento parcial.
-- Utilize notas abaixo de 5 somente quando a resposta estiver incorreta ou demonstrar desconhecimento do assunto.
-- Considere sinônimos e explicações equivalentes como válidos.
-- Seja rigoroso, mas não excessivamente exigente.
-- Não cobre detalhes que não foram solicitados na pergunta.
-
-Retorne exatamente neste formato:
-
-Nota: X/10
-
-Situação:
-(Correta, Parcialmente Correta ou Incorreta)
-
-O que acertou:
-...
-
-O que faltou:
-...
-
-Explicação correta:
-...
-`,
+Siga estritamente esta estrutura de resposta JSON sem nenhum texto ou caractere por fora:
+{
+  "nota": "3/10",
+  "situacao": "Parcialmente Correta",
+  "acertos": "Texto contendo apenas o que o aluno acertou tecnicamente",
+  "faltou": "Texto contendo apenas o que faltou ou o que ele errou",
+  "explicacao": "A explicação conceitual correta esperada para alunos de ADS/Redes"
+}`,
             },
             {
               role: "user",
-              content: `
-Tema: ${tema}
-
-Pergunta:
-${pergunta}
-
-Resposta do aluno:
-${resposta}
-`,
+              content: `Tema: ${tema}\nPergunta: ${pergunta}\nResposta do Aluno: ${resposta}`,
             },
           ],
-          temperature: 0.5,
+          temperature: 0.3, 
           max_completion_tokens: 700,
         }),
       }
@@ -170,29 +145,50 @@ ${resposta}
 
     if (!response.ok) {
       const detalhe = await response.text();
-
-      return res.status(502).json({
-        erro: "Erro ao corrigir resposta.",
-        detalhe,
-      });
+      return res.status(502).json({ erro: "Erro ao corrigir resposta.", detalhe });
     }
 
     const data = await response.json();
+    const avaliacaoRaw = data.choices?.[0]?.message?.content;
 
-    const avaliacao = data.choices?.[0]?.message?.content;
-
-    if (!avaliacao) {
-      return res.status(502).json({
-        erro: "Avaliação não gerada.",
-      });
+    if (!avaliacaoRaw) {
+      return res.status(502).json({ erro: "Avaliação não gerada." });
     }
 
-    res.json({
-      avaliacao,
-    });
+    let avaliacaoJson;
+    
+    try {
+      avaliacaoJson = JSON.parse(avaliacaoRaw);
+    } catch (parseError) {
+      const texto = avaliacaoRaw;
+      
+      const extrairCampo = (padrãoInicio, padrãoFim) => {
+        const regex = new RegExp(`${padrãoInicio}.*?:?\\s*([\\s\\S]*?)(?=${padrãoFim}|$)`, 'i');
+        const match = texto.match(regex);
+        return match ? match[1].trim() : "Não informado";
+      };
+
+      avaliacaoJson = {
+        nota: extrairCampo("Nota", "Sit"),
+        situacao: extrairCampo("Sit", "O que ac"),
+        acertos: extrairCampo("O que ac", "O que fa"),
+        faltou: extrairCampo("O que fa", "Expli|Expl"),
+        explicacao: extrairCampo("Expli|Expl", "FIM_DO_TEXTO")
+      };
+    }
+
+    const limparPrefixo = (str) => str.replace(/^[^:]+:\s*/i, '');
+    
+    avaliacaoJson.nota = limparPrefixo(avaliacaoJson.nota);
+    avaliacaoJson.situacao = limparPrefixo(avaliacaoJson.situacao);
+    avaliacaoJson.acertos = limparPrefixo(avaliacaoJson.acertos);
+    avaliacaoJson.faltou = limparPrefixo(avaliacaoJson.faltou);
+    avaliacaoJson.explicacao = limparPrefixo(avaliacaoJson.explicacao);
+
+    res.json(avaliacaoJson);
   } catch (error) {
     res.status(500).json({
-      erro: "Erro interno.",
+      erro: "Erro interno na correção.",
       detalhe: error.message,
     });
   }
