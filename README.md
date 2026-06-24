@@ -28,7 +28,7 @@ Permitir que estudantes pratiquem conteúdos de cibersegurança por meio de perg
 * Engenharia Social
 * Redes de Computadores
 
-## 🛠️ Tecnologias e Recursos
+## Tecnologias e Recursos
 
 ### **Backend**
 * **Node.js** — Ambiente de execução JavaScript.
