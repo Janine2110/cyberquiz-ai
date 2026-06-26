@@ -6,10 +6,10 @@ const app = express();
 const PORT = 3000;
 
 const API_KEY = process.env.OPENROUTER_API_KEY;
-const MODEL = "openai/gpt-oss-120b:free";
+// const MODEL = "openai/gpt-oss-120b:free";
+const MODEL = "nvidia/nemotron-3-ultra-550b-a55b:free";
 
 if (!API_KEY) {
-  console.error("Erro: configure OPENROUTER_API_KEY no arquivo .env.");
   process.exit(1);
 }
 
@@ -117,19 +117,19 @@ app.post("/api/corrigir", async (req, res) => {
           messages: [
             {
               role: "system",
-              content: `Você é um professor universitário especialista em cibersegurança, lecionando para turmas de 3º ao 5º semestre de Análise e Desenvolvimento de Sistemas (ADS) e Redes de Computadores.
+              content: `Você é um professor universitário especialista em cibersegurança para turmas de 3º ao 5º semestre de ADS e Redes.
               
-Avalie a resposta de forma justa e compatível com uma prova técnica de graduação deste nível (intermediário). Caso o tema seja "Redes", exija precisão técnica voltada a Redes de Computadores.
+Avalie a resposta de forma justa, direta e EXTREMAMENTE CONCISA. Evite rodeios, textos longos ou repetições. Vá direto ao ponto.
 
 Você DEVE responder UNICAMENTE com um objeto JSON válido. 
 
-Siga estritamente esta estrutura de resposta JSON sem nenhum texto ou caractere por fora:
+Siga estritamente esta estrutura de resposta JSON:
 {
-  "nota": "3/10",
-  "situacao": "Parcialmente Correta",
-  "acertos": "Texto contendo apenas o que o aluno acertou tecnicamente",
-  "faltou": "Texto contendo apenas o que faltou ou o que ele errou",
-  "explicacao": "A explicação conceitual correta esperada para alunos de ADS/Redes"
+  "nota": "Ex: 7/10",
+  "situacao": "Ex: Parcialmente Correta",
+  "acertos": "Frase curta sobre o que o aluno acertou.",
+  "faltou": "Frase curta sobre o que faltou ou erro técnico.",
+  "explicacao": "Explicação conceitual direta e resumida (máximo 2 frases)."
 }`,
             },
             {
@@ -138,7 +138,7 @@ Siga estritamente esta estrutura de resposta JSON sem nenhum texto ou caractere 
             },
           ],
           temperature: 0.3, 
-          max_completion_tokens: 700,
+          max_completion_tokens: 250,
         }),
       }
     );
@@ -194,6 +194,4 @@ Siga estritamente esta estrutura de resposta JSON sem nenhum texto ou caractere 
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Servidor rodando em http://localhost:${PORT}`);
-});
+app.listen(PORT, () => {});
