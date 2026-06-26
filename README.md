@@ -43,7 +43,7 @@ Permitir que estudantes pratiquem conteúdos de cibersegurança por meio de perg
 * **Web Audio API** — Sintetização de efeitos sonoros nativos em tempo real.
 
 ### **Inteligência Artificial**
-* **OpenRouter API** — Integração com o modelo `gpt-oss-120b:free` para geração e correção de perguntas acadêmicas de cibersegurança.
+* **OpenRouter API** — Integração com o modelo `nvidia/nemotron-3-ultra-550b-a55b:free` para geração e correção de perguntas acadêmicas de cibersegurança.
 
 ## Instalação
 
